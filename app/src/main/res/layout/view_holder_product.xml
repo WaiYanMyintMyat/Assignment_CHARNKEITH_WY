@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="450dp"
+    android:layout_marginLeft="@dimen/margin_xlarge"
+    android:layout_marginRight="@dimen/margin_large"
+    android:layout_marginBottom="@dimen/margin_xxlarge"
+    >
+
+    <ImageView
+        android:id="@+id/iv_product_hero"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/bag_placeholder"
+        android:paddingLeft="@dimen/margin_medium_3"
+        android:paddingRight="@dimen/margin_medium_3"
+        android:scaleType="fitCenter"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:layout_marginBottom="@dimen/margin_xxlarge"
+        />
+
+</FrameLayout>

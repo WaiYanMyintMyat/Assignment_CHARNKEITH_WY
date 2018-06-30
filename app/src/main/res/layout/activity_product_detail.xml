@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        app:elevation="0dp">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:textAlignment="center"
+            app:elevation="0dp"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/advent_pro_thin"
+                android:text="new in "
+                android:textAllCaps="true"
+                android:textColor="@color/primaryText"
+                android:textSize="@dimen/text_regular_3x"
+                android:textStyle="bold" />
+        </android.support.v7.widget.Toolbar>
+    </android.support.design.widget.AppBarLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <TextView
+            android:id="@+id/tv_product_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_large"
+            android:gravity="center"
+            android:text="BAGS FOR LADIES"
+            android:textColor="@color/primaryText"
+            android:textSize="@dimen/text_regular_2x" />
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_product_name" />
+
+        <ImageView
+            android:id="@+id/btnColours"
+            android:layout_width="27dp"
+            android:layout_height="100dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@id/tv_product_name"
+            android:layout_centerVertical="true"
+            android:layout_marginTop="80dp"
+            android:layout_toLeftOf="@+id/rl_colours"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_btncolor" />
+
+        <RelativeLayout
+            android:id="@+id/rl_colours"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:visibility="gone">
+
+            <android.support.v7.widget.RecyclerView
+                android:layout_width="200dp"
+                android:layout_height="match_parent">
+
+            </android.support.v7.widget.RecyclerView>
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>
