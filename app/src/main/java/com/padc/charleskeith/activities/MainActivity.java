@@ -3,11 +3,14 @@ package com.padc.charleskeith.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -15,26 +18,54 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.padc.charleskeith.R;
 import com.padc.charleskeith.adapters.NewProductsAdapter;
+import com.padc.charleskeith.data.models.NewProductModel;
 import com.padc.charleskeith.delegates.NewProductDelegate;
+import com.padc.charleskeith.events.ApiErrorEvent;
+import com.padc.charleskeith.events.SuccessForceRefreshGetNewProductEvent;
+import com.padc.charleskeith.events.SuccessGetNewProductEvent;
+import com.padc.charleskeith.viewpods.EmptyViewPod;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener,NewProductDelegate {
+
     @BindView(R.id.rv_new_items)
     RecyclerView rvNewItems;
+
     @BindView(R.id.iv_single_view)
     ImageView ivSingleView;
+
     @BindView(R.id.iv_dual_view)
     ImageView ivDualView;
+
     @BindView(R.id.v_single_highlighter)
     View vSingleViewHighlighter;
+
     @BindView(R.id.v_dual_highlighter)
     View vDualViewHighlighter;
+
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+
+    @BindView(R.id.tv_item_count)
+    TextView tvItemCount;
+
+    @BindView(R.id.srl)
+    SwipeRefreshLayout srl;
+
+    @BindView(R.id.vp_empty)
+    EmptyViewPod vpEmpty;
 
     private NewProductsAdapter adapter;
     private final String TAG = MainActivity.class.getSimpleName();
@@ -44,7 +75,7 @@ public class MainActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this, this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        tvItemCount.setText("20 Items");
         setSupportActionBar(toolbar);
 
 
@@ -64,22 +95,74 @@ public class MainActivity extends BaseActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_drawer_opener);
 
-        rvNewItems.setLayoutManager(new GridLayoutManager(this, 2));
         adapter = new NewProductsAdapter(this);
-        rvNewItems.setAdapter(adapter);
 
-        ivDualView.setOnClickListener(v -> {
-                    rvNewItems.setLayoutManager(new GridLayoutManager(v.getContext(), 2));
-                    vDualViewHighlighter.setVisibility(View.VISIBLE);
-                    vSingleViewHighlighter.setVisibility(View.GONE);
+        rvNewItems.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            private boolean isListEndReached=false;
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                Log.d("NewsListActivity","OnScrollListener:onScrollStateChanged"+newState);
+
+                if (newState == RecyclerView.SCROLL_STATE_IDLE
+                        && ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition()
+                        == recyclerView.getAdapter().getItemCount() - 1
+                        && !isListEndReached){
+                    isListEndReached=true;
+                    NewProductModel.getObjInstance().loadNewProductList();
                 }
-        );
+            }
 
-        ivSingleView.setOnClickListener(v -> {
-            rvNewItems.setLayoutManager(new GridLayoutManager(v.getContext(), 1));
-            vSingleViewHighlighter.setVisibility(View.VISIBLE);
-            vDualViewHighlighter.setVisibility(View.GONE);
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                //dx delta x
+                //dy delta y
+                super.onScrolled(recyclerView, dx, dy);
+                Log.d("NewsListActivity","OnScrollListener:onScrolled - dx : "+dx+", dy : "+dy);
+                int visibleItemCount=recyclerView.getLayoutManager().getChildCount();
+                int totalItemCount=recyclerView.getLayoutManager().getItemCount();//3
+                int pastVisibleItems= ((LinearLayoutManager)recyclerView.getLayoutManager())
+                        .findFirstVisibleItemPosition();
+
+                if ((visibleItemCount + pastVisibleItems) < totalItemCount) {
+                    isListEndReached = false;
+                }
+            }
         });
+        rvNewItems.setAdapter(adapter);
+        rvNewItems.setLayoutManager(new GridLayoutManager(MainActivity.this, 2));
+
+        ivDualView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)tvNew.getLayoutParams();
+//                params.setMargins(0, 0, 26, 0); //substitute parameters for left, top, right, bottom
+//                tvNew.setLayoutParams(params);
+                rvNewItems.setLayoutManager(new GridLayoutManager(MainActivity.this, 2));
+                vDualViewHighlighter.setVisibility(View.VISIBLE);
+                vSingleViewHighlighter.setVisibility(View.GONE);
+            }
+        });
+
+        ivSingleView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rvNewItems.setLayoutManager(new GridLayoutManager(MainActivity.this, 1));
+                vSingleViewHighlighter.setVisibility(View.VISIBLE);
+                vDualViewHighlighter.setVisibility(View.GONE);
+            }
+        });
+
+        srl.setRefreshing(true);
+        srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                NewProductModel.getObjInstance().forceRefreshNewProductList();
+            }
+        });
+        NewProductModel.getObjInstance().loadNewProductList();
+
+        vpEmpty.setEmptyData(R.drawable.empty_data_placeholder,getString(R.string.empty_msg));
     }
 
     @Override
@@ -141,7 +224,47 @@ public class MainActivity extends BaseActivity
 
     @Override
     public void onTapProduct() {
-        Intent intent = new Intent(getApplicationContext(),ProductDetailActivity.class);
+        Intent intent = new Intent(MainActivity.this,ProductDetailActivity.class);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(!EventBus.getDefault().isRegistered(this)){
+            EventBus.getDefault().register(this);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(EventBus.getDefault().isRegistered(this)){
+            EventBus.getDefault().unregister(this);
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)//UI mhar display ya mhar mo lo Main Thread use tar...
+    public void onSuccessGetNewProduct(SuccessGetNewProductEvent event){
+        Log.d("onSuccessGetNews","onSuccessGetNews:"+event.getNewProductList().size());
+        adapter.appendNewProductList(event.getNewProductList());
+        srl.setRefreshing(false);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)//UI mhar display ya mhar mo lo Main Thread use tar...
+    public void onSuccessForceResultGetNewProduct(SuccessForceRefreshGetNewProductEvent event){
+        Log.d("onSuccessGetNews","onSuccessGetNews:"+event.getmNewProductList().size());
+        adapter.setNewProductList(event.getmNewProductList());
+        srl.setRefreshing(false);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)//UI mhar display ya mhar mo lo Main Thread use tar...
+    public void onFailGetNewProduct(ApiErrorEvent event){
+        srl.setRefreshing(false);
+
+        if(!event.getErrorMessage().equalsIgnoreCase("success")){
+            vpEmpty.setVisibility(View.VISIBLE);
+            Snackbar.make(srl,event.getErrorMessage(),Snackbar.LENGTH_INDEFINITE).show();//Snack bar show error use indefinite
+        }
     }
 }

@@ -27,7 +27,7 @@
         android:layout_height="1dp"
         android:background="@color/colorPrimaryDark"
         android:layout_below="@+id/iv_single_view"
-        android:layout_marginLeft="@dimen/margin_single_view_highlighter"
+        android:layout_marginLeft="@dimen/margin_card_medium_2"
         android:layout_marginTop="@dimen/margin_medium"
         android:visibility="gone"/>
 
@@ -79,13 +79,24 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/tv_item_count"
         android:layout_marginTop="@dimen/margin_medium_3"
-        android:layout_marginLeft="@dimen/margin_medium">
+        android:layout_centerHorizontal="true">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_new_items"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/srl"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            />
+            android:layout_height="match_parent">
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_new_items"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+        <include
+            android:id="@+id/vp_empty"
+            layout="@layout/view_pod_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"/>
 
     </FrameLayout>
 
